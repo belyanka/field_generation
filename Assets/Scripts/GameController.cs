@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 
@@ -9,13 +10,11 @@ public class GameController : MonoBehaviour {
     public int wallBlockNumber;
     public int enemyNumber;
     public Text loadingText;
+    public Text lifeText;
+    public Button mainMenuButton;
     
     private int[][] levelGrid;
-    private GameObject wall;
-    private GameObject start;
-    private GameObject player;
-    private GameObject enemy;
-    private GameObject finish;
+    private PlayerController playerController;
     private bool loaded;
 
     private const int fieldSize = 10;
@@ -24,20 +23,42 @@ public class GameController : MonoBehaviour {
     void Start()
     {
         //Show "Loading..."
+        Time.timeScale = 1;
         loaded = false;
+        mainMenuButton.gameObject.SetActive(false);
         loadingText.text = "Loading...";
         
         StartCoroutine(GenerateLevel());
         
     }
 
-    private void Update()
+    public void GameOver()
     {
-        if (loaded)
-        {
-            //Hide "Loading..."
-            //loadingText.text = "";    
-        }
+        loadingText.text = "Game Over";
+        mainMenuButton.gameObject.SetActive(true);
+        GamePause();
+    }
+
+    public void Win()
+    {
+        loadingText.text = "You win!";
+        mainMenuButton.gameObject.SetActive(true);
+        GamePause();
+    }
+
+    public void UpdateLifeCount(int life)
+    {
+        lifeText.text = "Life: " + life;
+    }
+
+    private void GamePause()
+    {
+        Time.timeScale = 0;
+    }
+
+    public void GoToMainMenu()
+    {
+        SceneManager.LoadScene("MainMenu");
     }
 
     IEnumerator GenerateLevel()
@@ -48,16 +69,8 @@ public class GameController : MonoBehaviour {
         LevelGenerator generator = new LevelGenerator();
         generator.Generate(fieldSize, wallBlockNumber, enemyNumber);
         levelGrid = generator.GetLevelGrid();
-        yield return new WaitForSeconds(2);
-        /*
-        Loading resources
-        */
-        wall = Resources.Load<GameObject>("Wall Block");
-        start = Resources.Load<GameObject>("Start Position");
-        finish = Resources.Load<GameObject>("Finish Position");
-        enemy = Resources.Load<GameObject>("Enemy");
-        player = Resources.Load<GameObject>("Player");
-
+        //yield return new WaitForSeconds(2);
+       
         //Set the obstacles, Start and Finish, Player and Enemies
         SetLevelEnvironment();
 
@@ -66,6 +79,15 @@ public class GameController : MonoBehaviour {
         yield return true;
     }
     private void SetLevelEnvironment() {
+        /*
+       Loading resources
+       */
+        GameObject wall = Resources.Load<GameObject>("Wall Block");
+        GameObject start = Resources.Load<GameObject>("Start Position");
+        GameObject finish = Resources.Load<GameObject>("Finish Position");
+        GameObject enemy = Resources.Load<GameObject>("Enemy");
+        GameObject player = Resources.Load<GameObject>("Player");
+
         for (int i = 0; i < fieldSize; i++) {
             for (int j = 0; j < fieldSize; j++) {
                 switch (levelGrid[i][j]) {
